@@ -95,7 +95,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "https://t1-expert.onrender.com/",
     methods: "GET,POST,DELETE,PUT",
     credentials: true,
   })
