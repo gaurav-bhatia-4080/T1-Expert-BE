@@ -7,7 +7,7 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
-      callbackURL: `https://t1-expert-api.onrender/auth/web/google/callback`,
+      callbackURL: `https://t1-expert-be.onrender/auth/web/google/callback`,
       scope: ["email", "profile"],
     },
     function (accessToken, refreshToken, profile, callback) {
