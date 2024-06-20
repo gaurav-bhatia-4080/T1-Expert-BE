@@ -55,7 +55,7 @@ app.use(express.json());
 app.use(
   session(
     {
-    saveUninitialized: true,
+    saveUninitialized: false,
     resave: false,
     secret: "secret",
     cookie: {
@@ -102,6 +102,7 @@ app.use(
     credentials: true,
   })
 );
+app.set('trust proxy', 1);
 
 // const passportConfig = require('./config/passport')(passport);
 // app.use("/auth", authRoute);
