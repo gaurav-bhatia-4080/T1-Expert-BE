@@ -4,6 +4,7 @@ const router = express.Router();
 const passport = require("passport");
 router.get("/login/success", (req, res) => {
   console.log("/login/success");
+  console.log(req, res);
   console.log(req.user);
 
   if (req.user) {
