@@ -97,7 +97,7 @@ app.use(
   cors({
     origin: "*",
     methods: "GET,POST,DELETE,PUT",
-    credentials: true,
+    credentials: false,
   })
 );
 
