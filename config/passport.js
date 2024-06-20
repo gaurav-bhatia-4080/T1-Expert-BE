@@ -15,11 +15,13 @@ passport.use(
       console.log(profile);
       Expert.findOne({ email: profile.emails[0].value }).then((x) => {
         if (x) {
+            console.log('Find')
           // if (x.toJSON().web_usage_access) callback(null, profile);
           // else {
       callback(null, profile);
           // }
         } else {
+            console.log('Create')
           Expert.create({
             email: profile.emails[0].value,
             name: profile.displayName,
