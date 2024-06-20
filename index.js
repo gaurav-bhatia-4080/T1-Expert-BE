@@ -97,7 +97,7 @@ app.use(
   cors({
     origin: "https://t1-expert.onrender.com",
     methods: "GET,POST,DELETE,PUT",
-    credentials: false,
+    credentials: true,
   })
 );
 
