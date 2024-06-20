@@ -55,12 +55,14 @@ app.use(express.json());
 app.use(
   session(
     {
-    saveUninitialized: false,
+    saveUninitialized: true,
     resave: false,
     secret: "secret",
     cookie: {
       secure: true,
       maxAge: 2 * 24 * 60 * 60 * 1000,
+        sameSite: 'none',
+        path: '/'
     }
 
   }
