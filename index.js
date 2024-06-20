@@ -95,7 +95,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(
   cors({
-    origin: "*",
+    origin: "https://t1-expert.onrender.com",
     methods: "GET,POST,DELETE,PUT",
     credentials: false,
   })
