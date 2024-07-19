@@ -58,7 +58,7 @@ app.use(
     resave: false,
     secret: "secret",
     cookie: {
-      secure: false,
+      secure: true,
       maxAge: 2 * 24 * 60 * 60 * 1000,
       sameSite: "none",
       path: "/",
