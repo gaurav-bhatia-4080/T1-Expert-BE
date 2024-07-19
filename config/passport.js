@@ -7,7 +7,10 @@ passport.use(
     {
       clientID: process.env.CLIENT_ID,
       clientSecret: process.env.CLIENT_SECRET,
+      // callbackURL: `http://localhost:8080/auth/web/google/callback`,
+
       callbackURL: `https://t1-expert-be.onrender.com/auth/web/google/callback`,
+
       scope: ["email", "profile"],
     },
     function (accessToken, refreshToken, profile, callback) {
@@ -15,21 +18,32 @@ passport.use(
       console.log(profile);
       Expert.findOne({ email: profile.emails[0].value }).then((x) => {
         if (x) {
-            console.log('Find')
-          // if (x.toJSON().web_usage_access) callback(null, profile);
-          // else {
-            console.log(profile, x);
-      callback(null, profile);
-          // }
+          console.log("x found");
+          // callback(null, profile);
+
+          if (x.toJSON().web_usage_access) {
+            console.log("x object created");
+
+            callback(null, profile);
+          } else {
+            profile.type = 0;
+            console.log("x profile 0 created");
+
+            callback(null, profile);
+            /// wrtie code here
+
+            // callback(null, profile);
+          }
         } else {
-            console.log('Create');
-            console.log(profile, x);
+          console.log("Create");
+          console.log(profile, x);
+          profile.type = -1;
           Expert.create({
             email: profile.emails[0].value,
             name: profile.displayName,
           }).then((x) => {
-      callback(null, profile);
-    });
+            callback(null, profile);
+          });
         }
       });
 

@@ -1,11 +1,13 @@
 const express = require("express");
-const ejs = require('ejs');
-const pdf = require('html-pdf');
+const ejs = require("ejs");
+const pdf = require("html-pdf");
 const router = express.Router();
 const NewPatientRequests = require("../models/New_Patients_Requests");
 const NewExerciseRequests = require("../models/New_Exercise_Request.js");
 const NewFoodRequests = require("../models/New_Food_Request.js");
 const Exercises = require("../models/Exercises.js");
+const PredParams = require("../models/Prediction_Trained_Params.js");
+
 const indexController = require("../controller/index_controller");
 const Food = require("../models/Food.js");
 const User = require("../models/User.js");
@@ -23,68 +25,99 @@ router.use("/newFoodRequest", require("./new_food_request"));
 var mongodb = require("mongodb");
 const Insulin = require("../models/Insulin.js");
 const PredictonExtraDetails = require("../models/Prediction_Extra_Details.js");
-const PredictionTrainedParams=require("../models/Prediction_Trained_Params.js")
+const PredictionTrainedParams = require("../models/Prediction_Trained_Params.js");
 const FoodEntry = require("../models/Food_Entry.js");
 const BloodGlucose = require("../models/Blood_Glucose.js");
+// const Expert = require("../models/Signed_Up_Experts.js");
 function checkAuth(req, res, next) {
   if (req.user) {
     next();
   } else {
     // res.redirect(`${process.env.CLIENT_URL}`);
     res.redirect("https://t1-expert.onrender.com/");
-
   }
 }
-router.get('/getExperts',(req,res)=>{
+router.get("/getExperts", (req, res) => {
   SignedUpExperts.find({})
-  .then(model=> {
-    const list=[];
-    for(let i of model){
-      console.log(i);
-      const eachObj={
-        _id:i._id,
-        email:i.email,
-        name:i.name
+    .then((model) => {
+      const list = [];
+      for (let i of model) {
+        console.log(i);
+        const eachObj = {
+          _id: i._id,
+          email: i.email,
+          name: i.name,
+        };
+        list.push(eachObj);
       }
-      list.push(eachObj);
-    }
-    console.log(list);
-     res.send(list);
-
-  }).catch(error=>{
-    res.send(error);
-  });
+      console.log(list);
+      res.send(list);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
 });
-router.get("/getPendingPatients/:id",checkAuth, (req, res) => {
+
+router.get("/getDoctors", checkAuth, (req, res) => {
+  SignedUpExperts.find({})
+    .then((model) => {
+      console.log("my doctors");
+      console.log(model);
+      res.send(model);
+      // const list = [];
+      // for (let i of model) {
+      //   const eachObj = {
+      //     email: i.email,
+      //     name: i.name,
+      //     clinic_address:i.clinic_address,
+      //     dob:i.dob,
+      //     phone:i.phone,
+      //     medical_reg_no:i.medical_reg_no,
+      //     degree:degree,
+      //     web_usage_access:i.web_usage_access
+      //   };
+      //   list.push(eachObj);
+      // }
+      // console.log("UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
+      // console.log(list);
+      // res.send(list);
+    })
+    .catch((error) => {
+      res.send(error);
+    });
+});
+
+router.get("/getPendingPatients/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
 
-  SignedUpExperts.findOne({ email: decodedEmail }).then((doctor) => {
-    const l = doctor.patients;
-    console.log(l);
-    NewPatientRequests.find({})
-    .then((model) => {
-      const ans = [];
-      if(model!=null){
-        model.map((each) => {
-          for(let i in l){
-            if(l[i].email===each.email)ans.push(each);
+  SignedUpExperts.findOne({ email: decodedEmail })
+    .then((doctor) => {
+      const l = doctor.patients;
+      console.log(l);
+      NewPatientRequests.find({})
+        .then((model) => {
+          const ans = [];
+          if (model != null) {
+            model.map((each) => {
+              for (let i in l) {
+                if (l[i].email === each.email) ans.push(each);
+              }
+            });
           }
-      });  
-      }
-      console.log(ans);
-      res.send(ans);
+          console.log(ans);
+          res.send(ans);
+        })
+        .catch((error) => {
+          res.send(error);
+        });
     })
     .catch((error) => {
-        res.send(error);
-      });
-  })
-  .catch((error)=>{
-    res.send(error);
-  })
+      res.send(error);
+    });
 });
-router.get("/getPendingFoods/:id",checkAuth, (req, res) => {
+router.get("/getPendingFoods/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
@@ -92,24 +125,24 @@ router.get("/getPendingFoods/:id",checkAuth, (req, res) => {
   SignedUpExperts.findOne({ email: decodedEmail }).then((doctor) => {
     const l = doctor.patients;
     NewFoodRequests.find({})
-    .then((model) => {
-      const ans = [];
-      if(model!=null){
-        model.map((each) => {
-          for(let i in l){
-            if(l[i].email===each.email)ans.push(each);
-          }
-      });  
-      }
-      console.log(ans);
-      res.send(ans);
-    })
-  .catch((error) => {
-      res.send(error);
-    });
+      .then((model) => {
+        const ans = [];
+        if (model != null) {
+          model.map((each) => {
+            for (let i in l) {
+              if (l[i].email === each.email) ans.push(each);
+            }
+          });
+        }
+        // console.log(ans);
+        res.send(ans);
+      })
+      .catch((error) => {
+        res.send(error);
+      });
+  });
 });
-});
-router.get("/getPendingExercises/:id",checkAuth, (req, res) => {
+router.get("/getPendingExercises/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
@@ -117,25 +150,25 @@ router.get("/getPendingExercises/:id",checkAuth, (req, res) => {
   SignedUpExperts.findOne({ email: decodedEmail }).then((doctor) => {
     const l = doctor.patients;
     NewExerciseRequests.find({})
-    .then((model) => {
-      const ans = [];
-      if(model!=null){
-        model.map((each) => {
-          for(let i in l){
-            if(l[i].email===each.email)ans.push(each);
-          }
-        // if (l.includes(each.email)) {
-          //   ans.push(each);
-          // }
-        });  
-      }
-      console.log(ans);
-      res.send(ans);
-    })
-  .catch((error) => {
-      res.send(error);
-    });
-});
+      .then((model) => {
+        const ans = [];
+        if (model != null) {
+          model.map((each) => {
+            for (let i in l) {
+              if (l[i].email === each.email) ans.push(each);
+            }
+            // if (l.includes(each.email)) {
+            //   ans.push(each);
+            // }
+          });
+        }
+        console.log(ans);
+        res.send(ans);
+      })
+      .catch((error) => {
+        res.send(error);
+      });
+  });
 
   //     .then((model) => {
   //       const ans = [];
@@ -144,7 +177,7 @@ router.get("/getPendingExercises/:id",checkAuth, (req, res) => {
   //           if (l.includes(each.email)) {
   //             ans.push(each);
   //           }
-  //         });  
+  //         });
   //       }
   //       console.log(ans);
   //       res.send(ans);
@@ -291,9 +324,9 @@ router.get("/getFoodDatabase", checkAuth, (req, res) => {
   Food.find({})
     .then((model) => {
       console.log("thi si smodeee");
-      console.log(model);
-      console.log(model.length);
-      console.log(typeof(model));
+      // console.log(model);
+      // console.log(model.length);
+      // console.log(typeof model);
       res.send(model);
     })
     .catch((error) => {
@@ -301,7 +334,7 @@ router.get("/getFoodDatabase", checkAuth, (req, res) => {
     });
 });
 
-router.get("/getPatients/:id",checkAuth, (req, res) => {
+router.get("/getPatients/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
@@ -311,35 +344,35 @@ router.get("/getPatients/:id",checkAuth, (req, res) => {
     console.log("this is the patients list");
     console.log(l);
     User.find({})
-    .then((model) => {
+      .then((model) => {
         const ans = [];
-        if(model!=null){
+        if (model != null) {
           model.map((each) => {
-            for(let i in l){
-              if(l[i].email===each.email)ans.push(each);
+            for (let i in l) {
+              if (l[i].email === each.email) ans.push(each);
             }
-            });  
+          });
         }
         console.log(ans);
         res.send(ans);
       })
-    .catch((error) => {
-      res.send(error);
-    });
-});
+      .catch((error) => {
+        res.send(error);
+      });
+  });
 
-    // .then((model) => {
-    //     const ans = [];
-    //     if(model!=null){
-    //       model.map((each) => {
-    //         if (l.includes(each.email)) {
-    //           ans.push(each);
-    //         }
-    //       });  
-    //     }
-    //     console.log(ans);
-    //     res.send(ans);
-    //   })
+  // .then((model) => {
+  //     const ans = [];
+  //     if(model!=null){
+  //       model.map((each) => {
+  //         if (l.includes(each.email)) {
+  //           ans.push(each);
+  //         }
+  //       });
+  //     }
+  //     console.log(ans);
+  //     res.send(ans);
+  //   })
 
   // User.find({ user_app_usage_eligiblity: true })
   //   .then((model) => {
@@ -378,7 +411,7 @@ router.post("/getPredictionExtraDetails/:id", (req, res) => {
     });
 });
 
-router.get("/getInsulinDetails/:id",checkAuth, (req, res) => {
+router.get("/getInsulinDetails/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
@@ -389,17 +422,14 @@ router.get("/getInsulinDetails/:id",checkAuth, (req, res) => {
 
   Insulin.findOne({ email: decodedEmail })
     .then((model) => {
-      if(model){
+      if (model) {
         console.log("DK" + model.insulin_entries_list);
 
         res.send(model.insulin_entries_list);
-
-      }
-      else{
+      } else {
         console.log("DK");
 
         return res.send([]);
-
       }
       // if(!model){
       // }
@@ -409,20 +439,19 @@ router.get("/getInsulinDetails/:id",checkAuth, (req, res) => {
     });
 });
 
-router.get("/getFoodDetails/:id",checkAuth, (req, res) => {
+router.get("/getFoodDetails/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
 
-  FoodEntry.findOne({ email:decodedEmail })
+  FoodEntry.findOne({ email: decodedEmail })
     .then((model) => {
-      if(model){
-        console.log("food details",model);
+      if (model) {
+        console.log("food details", model);
 
-        console.log("food details",model.food_entries_list);
-        res.send(model.food_entries_list); 
-      }
-      else{
+        console.log("food details", model.food_entries_list);
+        res.send(model.food_entries_list);
+      } else {
         res.send([]);
       }
     })
@@ -452,6 +481,83 @@ router.post("/changeAppUsagePermission", (req, res) => {
       console.log("Error: " + err);
     });
 });
+router.post("/changeDoctorAppUsagePermission", (req, res) => {
+  const { email, value } = req.body;
+  SignedUpExperts.updateOne(
+    { email: email },
+    { $set: { web_usage_access: value } }
+  )
+    .then((obj) => {
+      console.log("done");
+      res.send({
+        code: 1,
+        msg: "",
+      });
+    })
+    .catch((err) => {
+      console.log("Error: " + err);
+    });
+});
+router.post("/updatePredictionValues", (req, res) => {
+  var {
+    email,
+    breakfast_icr,
+    breakfast_isf,
+    lunch_icr,
+    lunch_isf,
+    snack_icr,
+    snack_isf,
+    dinner_icr,
+    dinner_isf,
+    icr,
+    isf,
+    division_by,
+    insulin_dose,
+    average_breakfast,
+    average_lunch,
+    average_snack,
+    average_dinner,
+  } = req.body;
+  console.log("uu1xxxxxxxxxxxxx");
+
+  PredParams.updateOne(
+    { email: email },
+    {
+      $set: {
+        breakfast_icr,
+        breakfast_isf,
+        lunch_icr,
+        lunch_isf,
+        snack_icr,
+        snack_isf,
+        dinner_icr,
+        dinner_isf,
+        icr,
+        isf,
+        division_by,
+        insulin_dose,
+        average_breakfast,
+        average_lunch,
+        average_snack,
+        average_dinner,
+      },
+    }
+  )
+    .then((obj) => {
+      console.log("uu2");
+      res.send({
+        code: 1,
+        msg: "Updated Successfully",
+      });
+    })
+    .catch((err) => {
+      res.send({
+        code: -1,
+        msg: "Update failed",
+      });
+    });
+});
+
 router.post("/changePredictionPermission", (req, res) => {
   const { email, value } = req.body;
   User.updateOne(
@@ -487,14 +593,13 @@ router.get("/getPatientPredExtraDetails/:id", (req, res) => {
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
 
-  PredictonExtraDetails.findOne({email:decodedEmail}).then(model=>{
-    if(model){
+  PredictonExtraDetails.findOne({ email: decodedEmail }).then((model) => {
+    if (model) {
       res.send(model.extra_detail_entries);
-    }
-    else{
+    } else {
       res.send([]);
     }
-  })
+  });
 });
 
 router.get("/getPatientBG/:id", (req, res) => {
@@ -502,14 +607,13 @@ router.get("/getPatientBG/:id", (req, res) => {
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
 
-  BloodGlucose.findOne({email:decodedEmail}).then(model=>{
-    if(model){
+  BloodGlucose.findOne({ email: decodedEmail }).then((model) => {
+    if (model) {
       res.send(model.bg_entries_list);
-    }
-    else{
+    } else {
       res.send([]);
     }
-  })
+  });
 });
 
 router.get("/getPatientInsulin/:id", (req, res) => {
@@ -517,14 +621,13 @@ router.get("/getPatientInsulin/:id", (req, res) => {
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
 
-  Insulin.findOne({email:decodedEmail}).then(model=>{
-    if(model){
+  Insulin.findOne({ email: decodedEmail }).then((model) => {
+    if (model) {
       res.send(model.insulin_entries_list);
-    }
-    else{
+    } else {
       res.send([]);
     }
-  })
+  });
 });
 
 // router.get("/getPredictionTrainedParams/:id",checkAuth,(req,res)=>{
@@ -544,7 +647,7 @@ router.get("/getPatientInsulin/:id", (req, res) => {
 //             for(let i in l){
 //               if(l[i].email===each.email)ans.push(each);
 //             }
-//             });  
+//             });
 //         }
 //         console.log(ans);
 //         res.send(ans);
@@ -553,9 +656,9 @@ router.get("/getPatientInsulin/:id", (req, res) => {
 //       res.send(error);
 //     });
 // });
-    
+
 // })
-router.get("/getPredictionTrainedParams/:id",checkAuth, (req, res) => {
+router.get("/getPredictionTrainedParams/:id", checkAuth, (req, res) => {
   const { id } = req.params;
   const urlDecodedEmail = decodeURIComponent(id);
   const decodedEmail = atob(urlDecodedEmail);
@@ -566,17 +669,14 @@ router.get("/getPredictionTrainedParams/:id",checkAuth, (req, res) => {
 
   PredictionTrainedParams.findOne({ email: decodedEmail })
     .then((model) => {
-      if(model){
+      if (model) {
         console.log("pred params values");
         console.log(model);
         res.send(model);
-
-      }
-      else{
+      } else {
         console.log("DK");
 
         return res.send([]);
-
       }
       // if(!model){
       // }
@@ -584,11 +684,10 @@ router.get("/getPredictionTrainedParams/:id",checkAuth, (req, res) => {
     .catch((error) => {
       res.send(error);
     });
-
 });
 
-router.get('/downloadPDF/:id',async(req,res)=>{
-  const {id}=req.params;
+router.get("/downloadPDF/:id", async (req, res) => {
+  const { id } = req.params;
   var uniqueNames = [
     {
       Fasting: "",
@@ -610,38 +709,36 @@ router.get('/downloadPDF/:id',async(req,res)=>{
       threeamin: "",
     },
   ];
-  
-  const pred=await PredictonExtraDetails.findOne({email:id});
-  const bg=await BloodGlucose.findOne({email:id});
-  const insulin= await Insulin.findOne({email:id});
 
-  let exam=[];
-  let exambg=[];
-  let examinsulin=[];
-  if(pred!=null){
-    exam=pred.extra_detail_entries
+  const pred = await PredictonExtraDetails.findOne({ email: id });
+  const bg = await BloodGlucose.findOne({ email: id });
+  const insulin = await Insulin.findOne({ email: id });
+
+  let exam = [];
+  let exambg = [];
+  let examinsulin = [];
+  if (pred != null) {
+    exam = pred.extra_detail_entries;
   }
-  if(bg!=null){
-    exambg=bg.bg_entries_list
+  if (bg != null) {
+    exambg = bg.bg_entries_list;
   }
-  if(insulin!=null){
-    examinsulin=insulin.insulin_entries_list
+  if (insulin != null) {
+    examinsulin = insulin.insulin_entries_list;
   }
 
   console.log("predModel", exambg);
-  if(exam!=null){
+  if (exam != null) {
     exam.map((varrr) => {
       let obj = uniqueNames.find(
         (o) =>
-          o.CURRENT_DATE ===
-            new Date(varrr.date).toLocaleDateString() &&
+          o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString() &&
           o.CURRENT_TIME === varrr.time
       );
       // console.log(obj)
       if (obj == null) {
         let obj2 = uniqueNames.find(
-          (o) =>
-            o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
+          (o) => o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
         );
         if (obj2 == null) {
           if (varrr.FOOD_CATEGORY == "Breakfast") {
@@ -728,17 +825,15 @@ router.get('/downloadPDF/:id',async(req,res)=>{
         // Listid.push(parseInt(varrr.CURRENT_BG , 10 ) + 1);
         // Listin.push(varrr.CURRENT_DATE)
       }
-    })
-  
+    });
   }
-  if(examinsulin!=null){
+  if (examinsulin != null) {
     examinsulin.map((varrr) => {
       let obj = uniqueNames.find(
-        (o) =>
-          o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
+        (o) => o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
       );
       // console.log(obj)
-  
+
       if (obj == null) {
         if (varrr.category == "Pre-breakfast") {
           let tryth = {
@@ -760,7 +855,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.category == "Pre-lunch") {
           let tryth = {
@@ -782,7 +877,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.category == "Pre-dinner") {
           let tryth = {
@@ -804,7 +899,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.category == "Bed-time") {
           let tryth = {
@@ -826,7 +921,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: varrr.amount,
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         }
         // uniqueNames.push(tryth);
@@ -853,17 +948,15 @@ router.get('/downloadPDF/:id',async(req,res)=>{
           uniqueNames.push(tryth);
         }
       }
-    })
-  
+    });
   }
-  if(exambg!=null){
+  if (exambg != null) {
     exambg.map((varrr) => {
       let obj = uniqueNames.find(
-        (o) =>
-          o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
+        (o) => o.CURRENT_DATE === new Date(varrr.date).toLocaleDateString()
       );
       // console.log(obj)
-  
+
       if (obj == null) {
         if (varrr.type == "Fasting") {
           let tryth = {
@@ -885,7 +978,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "2 hrs after breakfast") {
           let tryth = {
@@ -907,7 +1000,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "Before lunch") {
           let tryth = {
@@ -929,7 +1022,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "2 hrs after lunch") {
           let tryth = {
@@ -951,7 +1044,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "Before dinner") {
           let tryth = {
@@ -973,7 +1066,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "2 hrs after dinner") {
           let tryth = {
@@ -995,7 +1088,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         } else if (varrr.type == "3:00 am") {
           let tryth = {
@@ -1017,7 +1110,7 @@ router.get('/downloadPDF/:id',async(req,res)=>{
             adin: "--",
             threeamin: "--",
           };
-  
+
           uniqueNames.push(tryth);
         }
         // uniqueNames.push(tryth);
@@ -1045,32 +1138,30 @@ router.get('/downloadPDF/:id',async(req,res)=>{
         }
       }
     });
-  
   }
   try {
     // Render EJS template to HTML
     // F:\Back End Web Development Codes\T1L Backend\routes\downloadRecordApp.ejs
-    const html = await ejs.renderFile('downloadRecordApp.ejs', {uniqueNames});
+    const html = await ejs.renderFile("downloadRecordApp.ejs", { uniqueNames });
 
     // Generate PDF from HTML
     pdf.create(html).toBuffer((err, stream) => {
       if (err) {
-        res.status(500).send('Error generating PDF');
+        res.status(500).send("Error generating PDF");
         return;
       }
-      
+
       console.log("PDF GENEREATED SUCCESSFULLY");
       // Send PDF as response
-      res.setHeader('Content-Type', 'application/pdf'); 
-      res.setHeader('Content-Disposition', 'attachment; filename="output.pdf"');
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader("Content-Disposition", 'attachment; filename="output.pdf"');
       res.send(stream);
       // stream.pipe(res);
     });
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('Internal Server Error');
-  }  
+    console.error("Error:", error);
+    res.status(500).send("Internal Server Error");
+  }
 });
-
 
 module.exports = router;

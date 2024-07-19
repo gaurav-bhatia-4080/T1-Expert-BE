@@ -6,8 +6,8 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const passport = require("passport");
 const cors = require("cors");
-const path = require('path');
-const ejsFolder = path.join(__dirname, 'routes');
+const path = require("path");
+const ejsFolder = path.join(__dirname, "routes");
 
 // Configure Express to serve static files from the views folder
 const cookieSession = require("cookie-session");
@@ -22,7 +22,7 @@ const app = express();
 // app.use(cors());
 app.use(express.static(ejsFolder));
 
-app.use(cookieParser('secret'));
+app.use(cookieParser("secret"));
 // app.use(
 //   bodyParser.urlencoded({
 //
@@ -53,20 +53,17 @@ app.use(express.json());
 // }
 
 app.use(
-  session(
-    {
+  session({
     saveUninitialized: false,
     resave: false,
     secret: "secret",
     cookie: {
-      secure: true,
+      secure: false,
       maxAge: 2 * 24 * 60 * 60 * 1000,
-        sameSite: 'none',
-        path: '/'
-    }
-
-  }
-  )
+      sameSite: "none",
+      path: "/",
+    },
+  })
 );
 
 // app.use(
@@ -97,12 +94,14 @@ app.use(passport.initialize());
 app.use(passport.session());
 app.use(
   cors({
+    // origin: "http://localhost:3000",
+
     origin: "https://t1-expert.onrender.com",
     methods: "GET,POST,DELETE,PUT",
     credentials: true,
   })
 );
-app.set('trust proxy', 1);
+app.set("trust proxy", 1);
 
 // const passportConfig = require('./config/passport')(passport);
 // app.use("/auth", authRoute);

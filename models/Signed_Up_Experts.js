@@ -16,6 +16,21 @@ const expertsSchema=new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    clinic_address:{
+        type:String
+    },
+    dob:{
+        type:Date
+    },
+    phone:{
+        type:String
+    },
+    medical_reg_no:{
+        type:String
+    },
+    degree:{
+        type:String
+    },
     patients:[each_patient]
 });
 const Expert = mongoose.model('signed_up_experts',expertsSchema);
